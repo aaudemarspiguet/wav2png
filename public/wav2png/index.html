@@ -575,7 +575,9 @@
             data.setUint8(1, 'I'.charCodeAt(0));
             data.setUint8(2, 'F'.charCodeAt(0));
             data.setUint8(3, 'F'.charCodeAt(0));
-            data.setUint32(4, 36 + samples.length * N_CHANNELS, true);
+            // RIFF chunk size = total file bytes - 8. Samples are 16-bit (2 bytes each);
+            // undercounting here makes strict parsers (iOS CoreAudio) truncate playback.
+            data.setUint32(4, 36 + samples.length * 2 * N_CHANNELS, true);
             // WAV
             data.setUint8(8, 'W'.charCodeAt(0));
             data.setUint8(9, 'A'.charCodeAt(0));
