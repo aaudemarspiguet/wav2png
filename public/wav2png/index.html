@@ -449,11 +449,8 @@
             let reader = new FileReader();
             if (evt.dataTransfer.files.length > 0) {
                 if (file.name.toLowerCase().includes(".png") || file.name.toLowerCase().includes(".jpg") || file.name.toLowerCase().includes(".jpeg")) {
-                    reader.readAsDataURL(file);
-                    reader.onload = function (e2) {
-                        // Start PNG Process
-                        img2audio(e2.target.result);
-                    }
+                    // Start PNG Process
+                    img2audio(file);
                 } else if (file.name.includes(".wav")) {
                     reader.readAsArrayBuffer(file);
                     reader.onload = function (e2) {
@@ -635,21 +632,21 @@
             link.click();
         }
         const img2audio = (imgBlob) => {
-            var img = new Image();
-            img.src = imgBlob;
-            img.onload = function () {
-                console.log(img.width);
-                pngContext.canvas.width = img.width;
-                pngContext.canvas.height = img.height;
-                pngContext.drawImage(img, 0, 0);
-                let imageData = pngContext.getImageData(0, 0, img.width, img.height).data;
+            // createImageBitmap gives true pixel dimensions; an <img>'s width/height
+            // gets halved by Safari for PNGs carrying "@2x" DPI metadata (e.g. from
+            // Photoshop re-saves), silently truncating the decoded audio.
+            createImageBitmap(imgBlob).then(function (bitmap) {
+                pngContext.canvas.width = bitmap.width;
+                pngContext.canvas.height = bitmap.height;
+                pngContext.drawImage(bitmap, 0, 0);
+                let imageData = pngContext.getImageData(0, 0, bitmap.width, bitmap.height).data;
                 let newImageData = Array();
                 for (let i = 0; i < imageData.length; i += 4) {
                     newImageData.push((((imageData[i] + imageData[i + 1] + imageData[i + 2]) / 768) - 0.5) * 2);
                 }
                 loading.style.opacity = "0";
                 exportWAV("audio/wav", newImageData, newImageData.length);
-            };
+            });
         }
     </script>
 </body>
